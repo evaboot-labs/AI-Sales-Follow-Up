@@ -1,0 +1,715 @@
+{
+  "name": "AI sales follow-up with stop rules (HubSpot, Claude, Instantly)",
+  "nodes": [
+    {
+      "id": "3ec0c604-3b5a-5435-a015-eb51bb70b2a6",
+      "name": "Template overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -860,
+        -420
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 560,
+        "height": 1060,
+        "content": "## AI sales follow-up with stop rules (HubSpot, Claude, Instantly)\n\n**Who it's for:** sales teams that send a first email and lose deals because nobody follows up, or follow up after the lead already replied.\n\n**What it does:** every weekday at 9am, the workflow finds HubSpot contacts last contacted more than 3 days ago. It checks five stop rules (reply, meeting, open deal, unsubscribe, customer) and a maximum of 2 follow-ups. For each contact still due, Claude writes a short follow-up that refers to the previous email, Instantly sends it, and the email is logged on the contact. Replies in Instantly are copied back to HubSpot first, so a lead who answered is never chased.\n\n### How to set up\n1. In HubSpot, create a service key with the scopes `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.schemas.contacts.read`, `crm.schemas.contacts.write`, `sales-email-read`, and create the 3 contact properties from the GitHub repo (or run `python3 follow_up.py --setup`).\n2. In Instantly, create a campaign with one step: subject `{{followup_subject}}`, body `{{personalization}}`. Turn on **Stop sending emails on reply** and **Stop campaign for company on reply**.\n3. Add credentials: **HubSpot Service Key**, **Anthropic**, and **Header Auth** for Instantly (name `Authorization`, value `Bearer YOUR_KEY`).\n4. Fill in **Your settings**, click **Execute workflow** to test, then publish.\n\n### Requirements\nHubSpot (the free plan works), an Anthropic API key, an Instantly account with a connected mailbox.\n\n### How to customize\nEdit the writing rules in **Your settings** (followUpGuide). Change the stop rules in **Check stop rules**. The same workflow as a Python script with agent instructions: github.com/evaboot-labs/AI-Sales-Follow-Up"
+      }
+    },
+    {
+      "id": "8bfd3ea1-055d-5235-9b7e-77ea40650640",
+      "name": "Step 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        -420
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 900,
+        "height": 380,
+        "content": "### 1. Copy replies from Instantly\nInstantly stops a sequence as soon as the lead replies. This branch marks those leads **Replied** in HubSpot, so the search below skips them."
+      }
+    },
+    {
+      "id": "6fafe1aa-d1f6-5bb2-a4f4-3d05735454e7",
+      "name": "Step 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        0
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 1340,
+        "height": 640,
+        "content": "### 2. Find who is due and apply the stop rules\nContacts last contacted more than **followUpAfterDays** ago. A reply, a meeting, an open deal, an unsubscribe, a customer stage or the follow-up limit stops the contact and records the reason."
+      }
+    },
+    {
+      "id": "f841de2b-a5d6-5609-b648-52a3917205f7",
+      "name": "Step 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 1500,
+        "height": 640,
+        "content": "### 3. Write, send and log\nClaude writes the follow-up from the lead and the previous email. Instantly sends it inside your schedule. The email is logged on the HubSpot contact, which moves **Last Contacted** forward."
+      }
+    },
+    {
+      "id": "74e1345b-2835-5e64-b56d-5f72e68d7b9c",
+      "name": "Every weekday at 9am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -220,
+        120
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4abc583c-bc97-5dda-8ef5-0ec2ee7fd1c0",
+      "name": "Test run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        320
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "506eb80f-5657-58b3-85a8-72035397a1ed",
+      "name": "Your settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "days",
+              "name": "followUpAfterDays",
+              "type": "number",
+              "value": 3
+            },
+            {
+              "id": "max",
+              "name": "maxFollowUps",
+              "type": "number",
+              "value": 2
+            },
+            {
+              "id": "camp",
+              "name": "instantlyCampaignId",
+              "type": "string",
+              "value": "YOUR_INSTANTLY_CAMPAIGN_ID"
+            },
+            {
+              "id": "sender",
+              "name": "senderName",
+              "type": "string",
+              "value": "Roy"
+            },
+            {
+              "id": "guide",
+              "name": "followUpGuide",
+              "type": "string",
+              "value": "# How to write a follow-up\n\n<!--\nReplace the lines below with your own voice and offer. The model reads this whole file\nfor every follow-up, so keep it short and concrete.\n-->\n\nYou write a short sales follow-up to a B2B lead who did not reply to our last email.\n\n## What we sell\n\nEvaboot exports LinkedIn Sales Navigator searches to a clean list with verified emails.\n\n## Rules\n\n- 40 to 80 words. Plain text, no links, no images.\n- Refer to the previous email in one short phrase; do not repeat it.\n- Add one new thing: a useful idea, a short example or a question about their team.\n- One clear, low-effort ask, such as a yes/no question.\n- Sound like a person: no \"just checking in\", no \"I hope this email finds you well\", no exclamation marks.\n- Use the lead's first name. Sign with the sender's first name only.\n- Follow-up 2 is the last one: make it shorter and say you will not follow up again.\n- Subject: 2 to 5 words, lowercase except names, no \"Re:\".\n- Never invent facts about the lead or their company. If you do not know something, do not mention it.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "162517da-0a1a-530c-8ef9-cc2c50a2771e",
+      "name": "Get campaign leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        -220
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.instantly.ai/api/v2/leads/list",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ campaign: $('Your settings').first().json.instantlyCampaignId, limit: 100 }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Instantly API key"
+        }
+      }
+    },
+    {
+      "id": "fe5c6afb-91bd-5935-8c12-39e688d4d7df",
+      "name": "Leads who replied",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        -220
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Leads that replied in Instantly. Instantly already stopped their sequence; HubSpot must agree.\nconst leads = $input.first().json.items || [];\nreturn leads.filter(l => (l.email_reply_count || 0) > 0).map(l => ({ json: { email: l.email } }));"
+      }
+    },
+    {
+      "id": "19c9dfc4-124a-5ff7-adbd-4c464ac6356e",
+      "name": "Mark replied in HubSpot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        -220
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ encodeURIComponent($json.email) }}?idProperty=email",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { ai_followup_status: 'replied' } }) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "b76fcb3e-762d-5bff-a7c1-7f01fd44c2da",
+      "name": "Find contacts to follow up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        220
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  filterGroups: [{ filters: [\n    { propertyName: 'notes_last_contacted', operator: 'LT', value: Date.now() - $('Your settings').first().json.followUpAfterDays * 86400000 },\n    { propertyName: 'ai_followup_status', operator: 'NOT_IN', values: ['replied', 'meeting', 'deal', 'unsubscribed', 'customer', 'finished'] }\n  ] }],\n  properties: ['email', 'firstname', 'lastname', 'jobtitle', 'company', 'industry', 'city', 'country', 'lifecyclestage',\n    'notes_last_contacted', 'hs_sales_email_last_replied', 'hs_latest_meeting_activity', 'num_associated_deals',\n    'hs_email_optout', 'ai_followup_count'],\n  sorts: [{ propertyName: 'notes_last_contacted', direction: 'ASCENDING' }],\n  limit: 100\n}) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    },
+    {
+      "id": "17d08f28-37a5-5175-9e70-165d64377b20",
+      "name": "One contact per item",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        420,
+        220
+      ],
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      }
+    },
+    {
+      "id": "208ace69-e92f-56f3-90cf-2333b255df4b",
+      "name": "Check stop rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        220
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// The stop rules. An empty reason means: send the next follow-up.\nconst p = $json.properties;\nconst settings = $('Your settings').first().json;\nconst last = new Date(p.notes_last_contacted);\nlet reason = '';\nif (p.hs_sales_email_last_replied && new Date(p.hs_sales_email_last_replied) >= last) reason = 'replied';\nelse if (p.hs_latest_meeting_activity) reason = 'meeting';\nelse if (Number(p.num_associated_deals || 0) > 0) reason = 'deal';\nelse if (p.hs_email_optout === 'true') reason = 'unsubscribed';\nelse if (['opportunity', 'customer', 'evangelist'].includes(p.lifecyclestage)) reason = 'customer';\nelse if (Number(p.ai_followup_count || 0) >= settings.maxFollowUps) reason = 'finished';\nreturn { id: $json.id, reason, number: Number(p.ai_followup_count || 0) + 1, contact: p };"
+      }
+    },
+    {
+      "id": "8e87fbb5-fa3a-548d-9fdb-d4a8b1d0a280",
+      "name": "Stopped?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        820,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "stop",
+              "leftValue": "={{ $json.reason }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5010c3f6-6e58-5f0b-b0fb-4cfc537e7f1f",
+      "name": "Record the stop reason",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        100
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { ai_followup_status: $json.reason } }) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    },
+    {
+      "id": "4d24d4f4-1cfa-52c0-a9bd-967ba9fe31ce",
+      "name": "Get emails",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        380
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.hubapi.com/crm/v4/objects/contacts/{{ $json.id }}/associations/emails",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {}
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    },
+    {
+      "id": "4dff90d9-7832-5d97-9722-74d4eb135088",
+      "name": "Read emails",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/emails/batch/read",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ inputs: ($json.results || []).map(r => ({ id: String(r.toObjectId) })), properties: ['hs_email_subject', 'hs_email_text', 'hs_email_direction', 'hs_timestamp'] }) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "56e9e423-09a1-5125-850e-3a06aab7600e",
+      "name": "Previous email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        380
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// The last email we sent, so the follow-up can refer to it.\nconst sent = ($json.results || []).map(e => e.properties).filter(e => e.hs_email_direction === 'EMAIL');\nsent.sort((a, b) => (a.hs_timestamp < b.hs_timestamp ? 1 : -1));\nconst lead = $('Check stop rules').item.json;\nconst c = lead.contact;\nconst settings = $('Your settings').first().json;\nconst prompt = `${settings.followUpGuide}\n\nWrite follow-up number ${lead.number} from ${settings.senderName}.\n\nLead:\nFirst name: ${c.firstname || 'unknown'}\nJob title: ${c.jobtitle || 'unknown'}\nCompany: ${c.company || 'unknown'}\nIndustry: ${c.industry || 'unknown'}\nLocation: ${[c.city, c.country].filter(Boolean).join(', ') || 'unknown'}\n\nPrevious email subject: ${sent[0]?.hs_email_subject || 'unknown'}\nPrevious email:\n${(sent[0]?.hs_email_text || '').slice(0, 1500)}\n\nAnswer with JSON only: {\"subject\": \"...\", \"body\": \"...\"}`;\nreturn { id: lead.id, number: lead.number, contact: c, prompt };"
+      }
+    },
+    {
+      "id": "1d339bf3-543b-5bfb-b328-35617086dbbe",
+      "name": "Write the follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'claude-sonnet-5-5',\n  max_tokens: 2000,\n  messages: [{ role: 'user', content: $json.prompt }]\n}) }}"
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "",
+          "name": "Anthropic"
+        }
+      }
+    },
+    {
+      "id": "f148ee50-a6d9-52d4-8078-84b80910685d",
+      "name": "Read the draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        380
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Claude answers with JSON: a subject and a body.\nconst text = $json.content.find(b => b.type === 'text').text.trim().replace(/^```json|```$/g, '').trim();\nconst mail = JSON.parse(text);\nconst lead = $('Previous email').item.json;\nreturn { id: lead.id, number: lead.number, contact: lead.contact, subject: mail.subject, body: mail.body };"
+      }
+    },
+    {
+      "id": "caa56d07-0482-53f6-b962-cca95a697f2c",
+      "name": "Send with Instantly",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.instantly.ai/api/v2/leads",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  campaign: $('Your settings').first().json.instantlyCampaignId,\n  email: $json.contact.email,\n  first_name: $json.contact.firstname || '',\n  last_name: $json.contact.lastname || '',\n  company_name: $json.contact.company || '',\n  personalization: $json.body,\n  custom_variables: { followup_subject: $json.subject },\n  skip_if_in_campaign: false\n}) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Instantly API key"
+        }
+      }
+    },
+    {
+      "id": "187e013d-ed37-5301-b673-2363f4402f2e",
+      "name": "Log the email in HubSpot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2100,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/emails",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  properties: { hs_timestamp: new Date().toISOString(), hs_email_direction: 'EMAIL', hs_email_status: 'SENT',\n    hs_email_subject: $('Read the draft').item.json.subject, hs_email_text: $('Read the draft').item.json.body },\n  associations: [{ to: { id: $('Read the draft').item.json.id }, types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 198 }] }]\n}) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    },
+    {
+      "id": "eed71a51-2ead-569c-acab-59db65eb6d5b",
+      "name": "Update the contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2280,
+        380
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $('Read the draft').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: {\n  ai_followup_status: 'active', ai_followup_count: $('Read the draft').item.json.number, ai_followup_last_sent: new Date().toISOString()\n} }) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every weekday at 9am": {
+      "main": [
+        [
+          {
+            "node": "Your settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test run": {
+      "main": [
+        [
+          {
+            "node": "Your settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Your settings": {
+      "main": [
+        [
+          {
+            "node": "Get campaign leads",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Find contacts to follow up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get campaign leads": {
+      "main": [
+        [
+          {
+            "node": "Leads who replied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leads who replied": {
+      "main": [
+        [
+          {
+            "node": "Mark replied in HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find contacts to follow up": {
+      "main": [
+        [
+          {
+            "node": "One contact per item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One contact per item": {
+      "main": [
+        [
+          {
+            "node": "Check stop rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check stop rules": {
+      "main": [
+        [
+          {
+            "node": "Stopped?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get emails": {
+      "main": [
+        [
+          {
+            "node": "Read emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read emails": {
+      "main": [
+        [
+          {
+            "node": "Previous email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Previous email": {
+      "main": [
+        [
+          {
+            "node": "Write the follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write the follow-up": {
+      "main": [
+        [
+          {
+            "node": "Read the draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the draft": {
+      "main": [
+        [
+          {
+            "node": "Send with Instantly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send with Instantly": {
+      "main": [
+        [
+          {
+            "node": "Log the email in HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log the email in HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Update the contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stopped?": {
+      "main": [
+        [
+          {
+            "node": "Record the stop reason",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
