@@ -1,0 +1,17 @@
+{
+  "name": "evaboot-labs-ai-sales-follow-up",
+  "owner": {
+    "name": "Evaboot",
+    "url": "https://evaboot.com"
+  },
+  "metadata": {
+    "description": "Follow up with HubSpot contacts who did not reply: Claude writes, Instantly sends, stop rules for replies, meetings and deals. Python script, n8n template and agent instructions."
+  },
+  "plugins": [
+    {
+      "name": "ai-sales-follow-up",
+      "source": "./",
+      "description": "Follow up with HubSpot contacts who did not reply: Claude writes, Instantly sends, stop rules for replies, meetings and deals. Python script, n8n template and agent instructions."
+    }
+  ]
+}

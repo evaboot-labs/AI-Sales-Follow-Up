@@ -1,0 +1,21 @@
+{
+  "name": "ai-sales-follow-up",
+  "version": "1.0.0",
+  "description": "Follow up with HubSpot contacts who did not reply: Claude writes, Instantly sends, stop rules for replies, meetings and deals. Python script, n8n template and agent instructions.",
+  "author": {
+    "name": "Evaboot",
+    "url": "https://evaboot.com"
+  },
+  "homepage": "https://evaboot.com/integrations/n8n",
+  "repository": "https://github.com/evaboot-labs/ai-sales-follow-up",
+  "license": "MIT",
+  "privacyPolicyUrl": "https://evaboot.com/privacy-policy",
+  "keywords": [
+    "sales-follow-up",
+    "hubspot",
+    "instantly",
+    "claude",
+    "evaboot"
+  ],
+  "skills": "./skills/"
+}
