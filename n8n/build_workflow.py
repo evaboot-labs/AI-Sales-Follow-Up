@@ -147,7 +147,7 @@ OVERVIEW = """## AI sales follow-up with stop rules (HubSpot, Claude, Instantly)
 HubSpot (the free plan works), an Anthropic API key, an Instantly account with a connected mailbox.
 
 ### How to customize
-Edit the writing rules in **Your settings** (followUpGuide). Change the stop rules in **Check stop rules**. The same workflow as a Python script with agent instructions: github.com/evaboot-labs/AI-Sales-Follow-Up"""
+Edit the writing rules in **Your settings** (followUpGuide). Change the stop rules in **Check stop rules**. The same workflow as a Python script with agent instructions: github.com/evaboot-labs/ai-sales-follow-up"""
 
 nodes = [
     sticky("Template overview", [-860, -420], 560, 1060, OVERVIEW),
