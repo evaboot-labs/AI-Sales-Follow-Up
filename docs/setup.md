@@ -34,7 +34,7 @@ HubSpot contacts ──> stop rules ──> due? ──> Claude writes ──> I
 
 ## Install
 
-You need Python 3.9 or later. No packages to install.
+You need Python 3.11 or later. No packages to install.
 
 1. **HubSpot service key.** In HubSpot, open **More > Development > Keys > Service Keys** and
    click **Create service key**. Add five scopes: `crm.objects.contacts.read`,

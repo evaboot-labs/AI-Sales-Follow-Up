@@ -5,7 +5,7 @@
 
 # AI sales follow-up with stop rules
 
-Follow up with every HubSpot contact who did not reply, with a short email Claude writes for that lead, sent through Instantly, and stop the moment they reply, book a meeting or become a deal.
+Follow up with every HubSpot contact who did not reply, with a short email Claude writes for that lead, sent through Instantly, and stop once they reply, book a meeting or become a deal.
 
 [![Works with Claude Code · Codex · Cursor](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Cursor-5719D9)](AGENTS.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5719D9)](LICENSE)
@@ -52,7 +52,7 @@ At most 2 follow-ups per contact. Each stop is saved on the contact as `ai_follo
 - **HubSpot** (the free plan works) with your first emails logged, and a service key: [setup](docs/setup.md).
 - **An Anthropic API key** for Claude.
 - **Instantly** with a connected mailbox and a one-step campaign.
-- **Python 3.9 or later.** No packages to install.
+- **Python 3.11 or later.** No packages to install.
 - **Cost:** one Claude call per follow-up, a few cents for a hundred emails.
 
 ## Go further
