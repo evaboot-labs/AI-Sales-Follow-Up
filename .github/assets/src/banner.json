@@ -1,0 +1,7 @@
+{"layout": "flow", "eyebrow": "evaboot-labs · ai-sales-follow-up", "headline": "Follow up until they answer.",
+ "subline": "AI-written follow-ups for HubSpot contacts, stopped the moment they reply.",
+ "nodes": [{"label": "01 · Find", "title": "HubSpot", "caption": "No reply after 3 days"},
+           {"label": "02 · Check", "title": "Stop rules", "caption": "Reply, meeting, deal, unsubscribe"},
+           {"label": "03 · Write", "title": "Claude", "caption": "A short follow-up for that lead"},
+           {"label": "04 · Result", "title": "Instantly sends", "caption": "Inside your sending schedule"}],
+ "spec": "at most <em>2</em> follow-ups · every weekday"}

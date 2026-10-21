@@ -1,0 +1,6 @@
+{"layout": "cards", "eyebrow": "evaboot-labs · stop rules", "headline": "Five reasons to stop.", "subline": "Checked before every follow-up, and saved on the contact in HubSpot.",
+ "cards": [{"label": "01", "title": "Replied", "quote": "Instantly stops the sequence, and the next run marks the contact <u>Replied</u>."},
+           {"label": "02", "title": "Meeting booked", "quote": "A meeting on the contact ends the follow-ups."},
+           {"label": "03", "title": "Deal open", "quote": "An open deal means sales has it. <u>No more emails.</u>"},
+           {"label": "04", "title": "Unsubscribed", "quote": "Never emailed again, whatever the count."},
+           {"label": "05", "title": "Customer", "quote": "Customers are not prospects. <u>Stopped.</u>"}]}
